@@ -1,0 +1,20 @@
+# FILES
+*.yaml
+*.pkl
+*.flist
+*.zip
+*.out
+*.npy
+*.gz
+*.ckpt
+*.pth
+*.log
+*.pyc
+*.csv
+*.yml
+*.ods
+*.ods#
+*.json
+build_docker.sh
+
+output/
