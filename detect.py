@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import LazyConfig, instantiate
-from detectron2.data.transforms import ResizeShortestEdge
+from detectron2.data.transforms import AugmentationList
 from detectron2.engine import DefaultPredictor
 from detectron2.modeling.roi_heads import CascadeROIHeads, StandardROIHeads
 from detectron2.structures import Instances
@@ -15,7 +15,7 @@ from PIL import Image
 
 class KeypointDetector:
 
-    def __init__(self, config_file: str, model_url: str, score_threshold: float) -> None:
+    def __init__(self, config_file: str, model_url: str, score_threshold: float, device) -> None:
         assert Path(config_file).is_file(), f"{config_file} does not exist."
         
         cfg = LazyConfig.load(config_file)
@@ -26,11 +26,11 @@ class KeypointDetector:
             assert cfg.model.roi_heads._target_ == StandardROIHeads
             cfg.model.roi_heads.box_predictor.test_score_thresh = score_threshold
             
-        self.model = instantiate(cfg.model).eval()
+        self.model = instantiate(cfg.model).eval().to(device)
         DetectionCheckpointer(self.model).load(model_url)
-        self.aug = ResizeShortestEdge(
-            [800, 1333] # Min and max defaults for detectron2
-        )
+        self.aug = instantiate(cfg.dataloader.test.mapper.augmentations)
+        assert len(self.aug) == 1
+        self.aug = self.aug[0]
         self.image_format = cfg.dataloader.train.mapper.image_format
 
     def predict(self, im: np.ndarray) -> Instances:
@@ -47,6 +47,7 @@ class KeypointDetector:
 
     def visualize_prediction(self, im, instances):
         visualizer = Visualizer(im)
+        instances = instances.to("cpu")
         return visualizer.draw_instance_predictions(predictions=instances).get_image()
 
 
@@ -58,11 +59,13 @@ class KeypointDetector:
 @click.option("--model-url", default="https://folk.ntnu.no/haakohu/checkpoints/maskrcnn_keypoint/keypoint_maskrcnn_R_50_FPN_1x.pth")
 @click.option("--score-threshold", default=.5, type=float)
 def main(impath: str, config_file: str, model_url:str, score_threshold):
-    detector = KeypointDetector(config_file, model_url, score_threshold)
+    device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+    detector = KeypointDetector(config_file, model_url, score_threshold, device=device)
     im = np.array(Image.open(impath).convert("RGB"))
     instances = detector.predict(im)
     visualized_prediction = detector.visualize_prediction(im, instances)
-    Image.fromarray(visualized_prediction).show()
+    Image.fromarray(visualized_prediction).save("images/example_output.png")
+
 
 if __name__ == "__main__":
     main()
