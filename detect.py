@@ -55,8 +55,8 @@ class KeypointDetector:
 @torch.no_grad()
 @click.command()
 @click.argument("impath")
-@click.option("--config-file", default="configs/keypoint_maskrcnn_R_50_FPN_1x.py")
-@click.option("--model-url", default="https://folk.ntnu.no/haakohu/checkpoints/maskrcnn_keypoint/keypoint_maskrcnn_R_50_FPN_1x.pth")
+@click.option("--config-file", default="configs/keypoint_maskrcnn_R_50_FPN_1x.py", help="Path to a config file")
+@click.option("--model-url", default="https://folk.ntnu.no/haakohu/checkpoints/maskrcnn_keypoint/keypoint_maskrcnn_R_50_FPN_1x.pth", help="Path to model weight")
 @click.option("--score-threshold", default=.5, type=float)
 def main(impath: str, config_file: str, model_url:str, score_threshold):
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -64,7 +64,7 @@ def main(impath: str, config_file: str, model_url:str, score_threshold):
     im = np.array(Image.open(impath).convert("RGB"))
     instances = detector.predict(im)
     visualized_prediction = detector.visualize_prediction(im, instances)
-    Image.fromarray(visualized_prediction).save("images/example_output.png")
+    Image.fromarray(visualized_prediction).show()
 
 
 if __name__ == "__main__":
