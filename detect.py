@@ -56,7 +56,7 @@ class KeypointDetector:
 @click.command()
 @click.argument("impath")
 @click.option("--config-file", default="configs/keypoint_maskrcnn_R_50_FPN_1x.py", help="Path to a config file")
-@click.option("--model-url", default="https://folk.ntnu.no/haakohu/checkpoints/maskrcnn_keypoint/keypoint_maskrcnn_R_50_FPN_1x.pth", help="Path to model weight")
+@click.option("--model-url", default="https://api.loke.aws.unit.no/dlr-gui-backend-resources-content/v2/contents/links/532a57f3-594b-4ec9-a6db-ef2e328ad60ae337668e-a83c-4222-9fa0-cec6f91adf4841b9a42e-a28e-403e-8b96-d55ac443b8c6", help="Path to model weight")
 @click.option("--score-threshold", default=.5, type=float)
 def main(impath: str, config_file: str, model_url:str, score_threshold):
     device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
